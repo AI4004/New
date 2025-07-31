@@ -14,8 +14,6 @@ module.exports.config = {
   hasPermssion: 0,
   credits: "Dipto",
   description: "Displays album options for selection.",
-  usePrefix: true,
-  prefix: true,
   category: "Media",
   commandCategory: "Media",
   usages:
