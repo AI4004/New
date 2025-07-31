@@ -16,8 +16,6 @@ module.exports = {
 		permission: 0,
 		description: "Upscale your image.",
 		commandCategory:: "utility",
-		prefix: true,
-		usePrefix: true
 	},
 
 	run: async ({  args, event, api }) => {
