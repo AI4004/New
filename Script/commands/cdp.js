@@ -17,8 +17,6 @@ const config = {
   countDown: 2,
   role: 0,
   hasPermission: 0,
-  usePrefix: true,
-  prefix: true,
   description: "Get random couple DP",
   category: "image",
   commandCategory: "image",
