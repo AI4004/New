@@ -30,12 +30,16 @@ module.exports.handleEvent = async function ({ api, event, getText }) {
 
   // Handle reaction to a message
   if (event.type === "message_reaction") {
-    const { reaction, messageID, senderID } = event;
+    const { reaction, messageID } = event;
 
-    // Check if the reaction is 😡 and it's not from the bot itself
-    if (reaction === "😡" && senderID !== botID) {
+    // Check if the reaction is 😡
+    if (reaction === "😡") {
       try {
-        await api.unsendMessage(messageID);
+        const messageInfo = await api.getMessageInfo(messageID);
+        // Check if the reacted message was sent by the bot itself
+        if (messageInfo.senderID === botID) {
+          await api.unsendMessage(messageID);
+        }
       } catch (e) {
         console.error("❌ Failed to unsend message via reaction:", e.message);
       }
