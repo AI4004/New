@@ -1,50 +1,38 @@
-module.exports.config = {
-  name: "reactionHandler",
-  version: "1.0.1",
-  hasPermission: 0,
-  credits: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
-  description: "Handles message reactions and replies",
-  commandCategory: "system",
-  usages: "reactionHandler",
-  cooldowns: 0
-};
+module.exports = function ({ api, models, Users, Threads, Currencies }) {
+  return async function ({ event }) {
+    const { threadID, messageID, userID, reaction } = event;
 
-module.exports.languages = {
-  "vi": {
-    "returnCant": "Không thể gỡ tin nhắn của người khác.",
-    "missingReply": "Hãy reply tin nhắn cần gỡ."
-  },
-  "en": {
-    "returnCant": "Cannot unsend messages from others.",
-    "missingReply": "Please reply to the message you want to unsend."
-  }
-};
+    // ধরা যাক তোমার admin ID গুলো নিচের array তে রাখো
+    const adminIDs = ['61577565253243', '61570292561520']; // এখানে তোমার admin id গুলো রাখো
 
-module.exports.run = async function ({ api, event, getText }) {
-  const currentUserID = api.getCurrentUserID();
+    // যদি reaction না হয় বা reaction বাদে অন্য event হয় তাহলে বাতিল
+    if (!reaction) return;
 
-  // Handle reaction event
-  if (event.reaction && event.senderID != currentUserID) {
-    if (event.reaction === "😡") {
-      try {
-        await api.unsendMessage(event.messageID);
-      } catch (e) {
-        console.log("Failed to unsend message:", e);
+    // যদি রিয়্যাকশন দেয়ার ইউজার admin না হয়, তাহলে বাতিল
+    if (!adminIDs.includes(userID)) return;
+
+    // শুধু 😡 reaction এর জন্য কাজ করবো
+    if (reaction !== '😡') return;
+
+    try {
+      // মেসেজ ইনফো নিয়ে আসি
+      const msgInfo = await api.getMessageInfo(messageID);
+
+      // মেসেজ কার - senderID
+      const senderID = msgInfo.senderID;
+
+      // bot id দিয়ে চেক করো, ধরলাম তোমার bot id এইটা
+      const botID = api.getCurrentUserID();
+
+      if (senderID === botID) {
+        // মেসেজ unsend করো (মুছে ফেলো)
+        await api.unsendMessage(messageID);
+
+        // চাইলে thread এ একটা নোটিফিকেশন পাঠাও
+        return api.sendMessage(`😡 Admin ${userID} reacted with angry emoji, so message deleted.`, threadID);
       }
+    } catch (error) {
+      console.error('handleReaction error:', error);
     }
-    return;
-  }
-
-  // Handle reply to message
-  if (event.messageReply) {
-    if (event.messageReply.senderID == currentUserID) {
-      try {
-        await api.unsendMessage(event.messageReply.messageID);
-      } catch (e) {
-        console.log("Failed to unsend replied message:", e);
-      }
-    } else {
-      return api.sendMessage(getText("returnCant"), event.threadID);
-    }
-  }
+  };
 };
