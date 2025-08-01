@@ -15,7 +15,7 @@ module.exports.languages = {
     "missingReply": "Hãy reply tin nhắn cần gỡ."
   },
   "en": {
-    "returnCant": "Cannot unsend messages from others.",
+    "returnCant": "",
     "missingReply": "Please reply to the message you want to unsend."
   }
 };
