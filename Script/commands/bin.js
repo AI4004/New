@@ -1,71 +1,99 @@
-const fs = require("fs");
-const path = require("path");
-const axios = require("axios");
+const fs = require("fs"),
+
+	path = require("path"),
+
+	axios = require("axios");
 
 module.exports.config = {
- name: "bin",
- version: "1.0.3",
- hasPermssion: 2,
- credits: "ULLASH",
- description: "ফাইল আপলোড করতে Dustbin API ব্যবহার করুন",
- commandCategory: "utility",
- usages: "[ফাইলনেম]",
- cooldowns: 15
-};
 
-module.exports.run = async function({ api, event, args }) {
- if (!args[0]) {
- return api.sendMessage("📁 ফাইলনের নাম লিখুন, উদাহরণ: bin test", event.threadID, event.messageID);
- }
+	name: "bin",
 
- const fileName = args[0];
- const cmdPath = path.join(__dirname, "..", "commands");
- const possiblePaths = [
- path.join(cmdPath, fileName),
- path.join(cmdPath, `${fileName}.js`)
- ];
+	version: "1.0",
 
- const filePath = possiblePaths.find(fs.existsSync);
+	hasPermssion: 2,
 
- if (!filePath) {
- return api.sendMessage("❌ ফাইল খুঁজে পাওয়া যায়নি!", event.threadID, event.messageID);
- }
+	credits: "Shaon Ahmed",
 
- try {
- const fileContent = fs.readFileSync(filePath, "utf8");
- const uploadMsg = await api.sendMessage("📤 ফাইল আপলোড হচ্ছে...", event.threadID);
+	description: "Upload local command files to a pastebin service.",
 
- try {
- // Dustbin API-তে রিকোয়েস্ট পাঠানো
- const response = await axios.post("http://141.11.167.247:6329/api/v1/pastes", {
- content: fileContent,
- syntax: "javascript",
- expire: "1h" // 1 ঘণ্টার জন্য স্টোর করবে
- }, {
- headers: { 
- "Content-Type": "application/json",
- "Authorization": "Bearer YOUR_API_KEY" // যদি প্রয়োজন হয়
- },
- timeout: 10000
- });
+	commandCategory: "utility",
 
- await api.unsendMessage(uploadMsg.messageID);
+	usages: "[filename]",
 
- if (response.data && response.data.raw_url) {
- return api.sendMessage(`✅ সফলভাবে আপলোড হয়েছে!\n📝 Raw ফাইল: ${response.data.raw_url}`, event.threadID);
- } else if (response.data && response.data.url) {
- return api.sendMessage(`✅ সফলভাবে আপলোড হয়েছে!\n🔗 লিংক: ${response.data.url}`, event.threadID);
- }
- throw new Error("API রেসপন্সে URL পাওয়া যায়নি");
+	cooldowns: 5
 
- } catch (apiError) {
- console.error("Dustbin API error:", apiError);
- await api.unsendMessage(uploadMsg.messageID);
- throw new Error(`ডাস্টবিন API ত্রুটি: ${apiError.message}`);
- }
+}, module.exports.run = async function({
 
- } catch (error) {
- console.error("Overall error:", error);
- return api.sendMessage(`❌ ত্রুটি: ${error.message}`, event.threadID, event.messageID);
- }
+	api: e,
+
+	event: s,
+
+	args: a
+
+}) {
+
+	if (0 === a.length) return e.sendMessage("📁 অনুগ্রহ করে ফাইলের নাম দিন।\nব্যবহার: pastebin <filename>", s.threadID, s.messageID);
+
+	const n = a[0],
+
+		r = path.join(__dirname, "..", "commands"),
+
+		t = path.join(r, n),
+
+		o = path.join(r, n + ".js");
+
+	let i;
+
+	if (fs.existsSync(t)) i = t;
+
+	else {
+
+		if (!fs.existsSync(o)) return e.sendMessage("❌ `commands` ফোল্ডারে ফাইলটি খুঁজে পাওয়া যায়নি।", s.threadID, s.messageID);
+
+		i = o
+
+	}
+
+	fs.readFile(i, "utf8", (async (a, n) => {
+
+		if (a) return console.error("❗ Read error:", a), e.sendMessage("❗ ফাইলটি পড়তে সমস্যা হয়েছে।", s.threadID, s.messageID);
+
+		try {
+
+			e.sendMessage("📤 ফাইল আপলোড হচ্ছে PasteBin-এ, অনুগ্রহ করে অপেক্ষা করুন...", s.threadID, (async (a, r) => {
+
+				if (a) return console.error(a);
+
+				const t = "https://pastebin-api.vercel.app",
+
+					o = await axios.post(`${t}/paste`, {
+
+						text: n
+
+					});
+
+				if (setTimeout((() => {
+
+						e.unsendMessage(r.messageID)
+
+					}), 1e3), o.data && o.data.id) {
+
+					const a = `${t}/raw/${o.data.id}`;
+
+					return e.sendMessage(`✅ ফাইল সফলভাবে আপলোড হয়েছে:\n🔗 ${a}`, s.threadID)
+
+				}
+
+				return console.error("⚠️ Unexpected API response:", o.data), e.sendMessage("⚠️ আপলোড ব্যর্থ হয়েছে। PasteBin সার্ভার থেকে সঠিক আইডি পাওয়া যায়নি।", s.threadID)
+
+			}))
+
+		} catch (a) {
+
+			return console.error("❌ Upload error:", a), e.sendMessage("❌ ফাইল আপলোড করতে সমস্যা হয়েছে:\n" + a.message, s.threadID)
+
+		}
+
+	}))
+
 };
