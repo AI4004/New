@@ -31,7 +31,7 @@ const minutes = Math.floor(elapsedSeconds % 3600 / 60);
 const seconds = Math.floor(elapsedSeconds % 60);
 const uptimeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;
 
-const message = `♡ ∩_∩\n （„• ֊ •„)♡\n╭──∪∪───────⟡\n│𝗨𝗣𝗧𝗜𝗠𝗘 𝗜𝗡𝗙𝗢\n├───────────⟡\n│ ⏰ 𝗥𝗨𝗡𝗧𝗜𝗠𝗘\n│ ${uptimeString}\n├───────────⟡`;
+const message = `♡  ∩_∩\n （„• ֊ •„)♡\n╭──∪∪───────⟡\n│𝗨𝗣𝗧𝗜𝗠𝗘 𝗜𝗡𝗙𝗢\n├───────────⟡\n│ ⏰ 𝗥𝗨𝗡𝗧𝗜𝗠𝗘\n│ ${uptimeString}\n├───────────⟡`;
 
 await _0x1b9028.sendMessage({ 'body': message }, _0x2e0c98.threadID);
 } catch (error) {
