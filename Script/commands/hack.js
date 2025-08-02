@@ -1,115 +1,98 @@
-const { loadImage, createCanvas } = require("canvas");
-const fs = require("fs-extra");
-const axios = require("axios");
-
-module.exports = {
-config: {
-name: "hack",
-version: "1.0",
-author: "Mostakim",
-countDown: 5,
-role: 1, // সাধারণ ব্যবহারকারী অ্যাক্সেসের জন্য 0 এ পরিবর্তন করুন, প্রয়োজনে সামঞ্জস্য করুন
-category: "fun",
-shortDescription: {
-en: "Generates a 'hacking' image with the user's profile picture.",
-},
-longDescription: {
-en: "Generates a 'hacking' image with the user's profile picture, useful for a fun prank.",
-},
-usage: {
-en: "{p}hack [mention user]",
-},
-aliases: ["hack"],
-},
-
-wrapText: async (ctx, name, maxWidth) => {
-return new Promise((resolve) => {
-if (ctx.measureText(name).width < maxWidth) return resolve([name]);
-if (ctx.measureText("W").width > maxWidth) return resolve(null);
-const words = name.split(" ");
-const lines = [];
-let line = "";
-while (words.length > 0) {
-let split = false;
-while (ctx.measureText(words[0]).width >= maxWidth) {
-const temp = words[0];
-words[0] = temp.slice(0, -1);
-if (split) words[1] = `${temp.slice(-1)}${words[1]}`;
-else {
-split = true;
-words.splice(1, 0, temp.slice(-1));
-}
-}
-if (ctx.measureText(`${line}${words[0]}`).width < maxWidth) {
-line += `${words.shift()} `;
-} else {
-lines.push(line.trim());
-line = "";
-}
-if (words.length === 0) lines.push(line.trim());
-}
-return resolve(lines);
-});
-},
-
-onStart: async function ({ api, event, args }) {
-let pathImg = __dirname + "/cache/background.png";
-let pathAvt1 = __dirname + "/cache/avtmot.png";
-
-const mention = Object.keys(event.mentions);
-let id = mention.length > 0 ? mention[0] : event.senderID;
-
-try {
-let userInfo = await api.getUserInfo(id);
-let name = userInfo[id].name;
-
-let backgroundURL = "https://drive.google.com/uc?id=1RwJnJTzUmwOmP3N_mZzxtp63wbvt9bLZ"; // মূল ব্যাকগ্রাউন্ড চিত্র URL
-
-// প্রোফাইল পিকচার টানার জন্য Facebook Graph API কল
-let getAvatar = await axios.get(`https://graph.facebook.com/${id}/picture?width=720&height=720`, { responseType: "arraybuffer" });
-fs.writeFileSync(pathAvt1, Buffer.from(getAvatar.data, "utf-8"));
-
-// ব্যাকগ্রাউন্ড ইমেজের জন্য HTTP কল
-let getBackground = await axios.get(backgroundURL, { responseType: "arraybuffer" });
-fs.writeFileSync(pathImg, Buffer.from(getBackground.data, "utf-8"));
-
-let baseImage = await loadImage(pathImg);
-let baseAvt1 = await loadImage(pathAvt1);
-
-let canvas = createCanvas(baseImage.width, baseImage.height);
-let ctx = canvas.getContext("2d");
-
-ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
-ctx.font = "400 23px Arial";
-ctx.fillStyle = "#1878F3"; // ফরেসবুক নীলের মতো রং
-ctx.textAlign = "start";
-
-const lines = await this.wrapText(ctx, name, 1160);
-ctx.fillText(lines.join("\n"), 200, 497); // টেক্সটের কি কর্ডিনেট সামঞ্জস্য করুন 
-
-ctx.beginPath();
-ctx.drawImage(baseAvt1, 83, 437, 100, 101); // প্রোফাইল পিকচার সামঞ্জস্য করুন 
-
-const imageBuffer = canvas.toBuffer();
-fs.writeFileSync(pathImg, imageBuffer);
-
-api.sendMessage(
-{
-body: "✅ 𝙎𝙪𝙘𝙘𝙚𝙨𝙨𝙛𝙥𝙣𝙦𝙡𝙯𝙘𝙡𝙬𝙭𝙘𝙝𝙎𝙘𝙡𝙕!",
-attachment: fs.createReadStream(pathImg),
-},
-event.threadID,
-() => {
-fs.unlinkSync(pathImg);
-fs.removeSync(pathAvt1); // অ্যাভাটার ফাইল মুছে ফেলুন 
-},
-event.messageID
-);
-} catch (e) {
-console.error("Error in hack command:", e);
-api.sendMessage("একটি ত্রুটি ঘটেছে। আবার চেষ্টা করুন।", event.threadID, event.messageID);
-if (fs.existsSync(pathImg)) fs.unlinkSync(pathImg);
-if (fs.existsSync(pathAvt1)) fs.removeSync(pathAvt1);
-}
-},
+module.exports.config = {
+  'name': "hack",
+  'version': "1.0.0",
+  'hasPermssion': 0x0,
+  'credits': "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
+  'description': "hack",
+  'commandCategory': "hack",
+  'usages': "@mention",
+  'dependencies': {
+    'axios': '',
+    'fs-extra': ''
+  },
+  'cooldowns': 0x0
+};
+module.exports.wrapText = (_0xd7edfc, _0x3cbc8a, _0x25fb06) => {
+  return new Promise(_0x449397 => {
+    if (_0xd7edfc.measureText(_0x3cbc8a).width < _0x25fb06) {
+      return _0x449397([_0x3cbc8a]);
+    }
+    if (_0xd7edfc.measureText('W').width > _0x25fb06) {
+      return _0x449397(null);
+    }
+    const _0x5bcb47 = _0x3cbc8a.split(" ");
+    const _0x317999 = [];
+    let _0x292a58 = '';
+    while (_0x5bcb47.length > 0) {
+      let _0x123d3d = false;
+      while (_0xd7edfc.measureText(_0x5bcb47[0]).width >= _0x25fb06) {
+        const _0x5674cf = _0x5bcb47[0];
+        _0x5bcb47[0] = _0x5674cf.slice(0, -1);
+        if (_0x123d3d) {
+          _0x5bcb47[1] = '' + _0x5674cf.slice(-1) + _0x5bcb47[1];
+        } else {
+          _0x123d3d = true;
+          _0x5bcb47.splice(1, 0, _0x5674cf.slice(-1));
+        }
+      }
+      if (_0xd7edfc.measureText('' + _0x292a58 + _0x5bcb47[0]).width < _0x25fb06) {
+        _0x292a58 += _0x5bcb47.shift() + " ";
+      } else {
+        _0x317999.push(_0x292a58.trim());
+        _0x292a58 = '';
+      }
+      if (_0x5bcb47.length === 0) {
+        _0x317999.push(_0x292a58.trim());
+      }
+    }
+    return _0x449397(_0x317999);
+  });
+};
+module.exports.run = async function ({
+  args: _0x3be024,
+  Users: _0x2518b9,
+  Threads: _0x2f6ba6,
+  api: _0x42f783,
+  event: _0xdbba42,
+  Currencies: _0x10d15e
+}) {
+  const {
+    loadImage: _0x529a97,
+    createCanvas: _0x366621
+  } = require("canvas");
+  const _0x16d843 = global.nodemodule["fs-extra"];
+  const _0x3aab96 = global.nodemodule.axios;
+  let _0x495b14 = __dirname + "/cache/background.png";
+  let _0x29f95b = __dirname + "/cache/Avtmot.png";
+  var _0x584819 = Object.keys(_0xdbba42.mentions)[0] || _0xdbba42.senderID;
+  var _0x2a5dee = await _0x2518b9.getNameUser(_0x584819);
+  var _0x2ede29 = ["https://i.imghippo.com/files/qEl8678STs.png"];
+  var _0x4a3597 = _0x2ede29[Math.floor(Math.random() * _0x2ede29.length)];
+  let _0x3f9218 = (await _0x3aab96.get("https://graph.facebook.com/" + _0x584819 + "/picture?width=720&height=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662", {
+    'responseType': "arraybuffer"
+  })).data;
+  _0x16d843.writeFileSync(_0x29f95b, Buffer.from(_0x3f9218, "utf-8"));
+  let _0x2d19b1 = (await _0x3aab96.get('' + _0x4a3597, {
+    'responseType': "arraybuffer"
+  })).data;
+  _0x16d843.writeFileSync(_0x495b14, Buffer.from(_0x2d19b1, "utf-8"));
+  let _0x338961 = await _0x529a97(_0x495b14);
+  let _0xbdda51 = await _0x529a97(_0x29f95b);
+  let _0x50ac2d = _0x366621(_0x338961.width, _0x338961.height);
+  let _0x4128d1 = _0x50ac2d.getContext('2d');
+  _0x4128d1.drawImage(_0x338961, 0, 0, _0x50ac2d.width, _0x50ac2d.height);
+  _0x4128d1.font = "400 23px Arial";
+  _0x4128d1.fillStyle = "#1878F3";
+  _0x4128d1.textAlign = "start";
+  const _0xf246da = await this.wrapText(_0x4128d1, _0x2a5dee, 1160);
+  _0x4128d1.fillText(_0xf246da.join("\n"), 200, 497);
+  _0x4128d1.beginPath();
+  _0x4128d1.drawImage(_0xbdda51, 83, 437, 100, 101);
+  const _0x24aac1 = _0x50ac2d.toBuffer();
+  _0x16d843.writeFileSync(_0x495b14, _0x24aac1);
+  _0x16d843.removeSync(_0x29f95b);
+  return _0x42f783.sendMessage({
+    'body': " ",
+    'attachment': _0x16d843.createReadStream(_0x495b14)
+  }, _0xdbba42.threadID, () => _0x16d843.unlinkSync(_0x495b14), _0xdbba42.messageID);
 };
