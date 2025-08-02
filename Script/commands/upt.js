@@ -1,56 +1,55 @@
-const axios = require("axios");
-const moment = require("moment");
-
 module.exports.config = {
-  name: "uptime",
-  version: "1.2",
-  author: "Kawsar",
-  cooldowns: 3,
-  description: "Shows bot uptime & auto-pings render host",
-  commandCategory: "system",
-  usages: "{pn}"
+  name: "upt",
+  version: "1.0.0",
+  hasPermssion: 0,
+  credits: "Kawsar Modified",
+  description: "Show uptime or add to Uptime Robot",
+  commandCategory: "monitor",
+  usages: "[upt] or [upt <link>]",
+  cooldowns: 5
 };
-
-let hostURL = null;
-
-async function startAutoPing(api) {
-  // শুধু RENDER_EXTERNAL_URL ইউজ করবো
-  hostURL = process.env.RENDER_EXTERNAL_URL || null;
-
-  if (!hostURL) {
-    console.log("[UPTIME] ❌ Render host URL not detected, auto-ping disabled.");
-    return;
-  }
-
-  if (!hostURL.startsWith("http")) hostURL = "https://" + hostURL;
-  if (!hostURL.endsWith("/uptime")) hostURL += "/uptime";
-
-  console.log(`[UPTIME] ✅ Auto ping started: ${hostURL}`);
-
-  setInterval(async () => {
-    try {
-      await axios.get(hostURL, { timeout: 10000 });
-      // ping সফল হলে কিছু করবে না
-    } catch (err) {
-      console.log("[UPTIME] ❌ Ping failed, কিন্তু admin notify করা হবে না");
-      // এখানে আর admin মেসেজ নেই, তাই silent fail
-    }
-  }, 1000 * 60 * 5); // ৫ মিনিট পর পর ping
-}
 
 module.exports.run = async function({ api, event, args }) {
-  if (!hostURL) await startAutoPing(api);
+  let time = process.uptime();
+  let hours = Math.floor(time / 3600);
+  let minutes = Math.floor((time % 3600) / 60);
+  let seconds = Math.floor(time % 60);
+  const formatTime = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-  const uptime = Math.floor(process.uptime());
-  const days = Math.floor(uptime / 86400);
-  const hours = Math.floor((uptime % 86400) / 3600);
-  const minutes = Math.floor((uptime % 3600) / 60);
-  const seconds = uptime % 60;
+  // যদি কোনো লিংক না দেয়, শুধু টাইম দেখাও
+  if (args.length === 0) {
+    return api.sendMessage(formatTime, event.threadID, event.messageID);
+  }
 
-  let uptimeFormatted = `⏳ ${days}d ${hours}h ${minutes}m ${seconds}s`;
-  if (days === 0) uptimeFormatted = `⏳ ${hours}h ${minutes}m ${seconds}s`;
-  if (hours === 0) uptimeFormatted = `⏳ ${minutes}m ${seconds}s`;
-  if (minutes === 0) uptimeFormatted = `⏳ ${seconds}s`;
+  // যদি লিংক দেয়, তাহলে Uptime Robot-এ পাঠাও
+  const url = args.join(" ");
+  const regex = /(http(s)?:\/\/)[^\s]+/g;
+  if (!url.match(regex)) {
+    return api.sendMessage("❌ দয়া করে একটা সঠিক লিংক দাও।", event.threadID, event.messageID);
+  }
 
-  return api.sendMessage(`𝗕𝗼𝘁 𝗨𝗽𝘁𝗶𝗺𝗲: ${uptimeFormatted}`, event.threadID);
-};
+  const request = require("request");
+  const options = {
+    method: 'POST',
+    url: 'https://api.uptimerobot.com/v2/newMonitor',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    form: {
+      api_key: 'u2008156-9837ddae6b3c429bd0315101',
+      format: 'json',
+      type: '1',
+      url: url,
+      friendly_name: Date.now()
+    }
+  };
+
+  request(options, function (error, response, body) {
+    if (error) return api.sendMessage("😢 লিংক পাঠাতে সমস্যা হয়েছে!", event.threadID, event.messageID);
+
+    const result = JSON.parse(body);
+    if (result.stat === "fail") {
+      return api.sendMessage("❗এই লিংকটা আগেই add করা আছে বা ভুল!", event.threadID, event.messageID);
+    }
+
+    return api.sendMessage(`✅ লিংক add করা হয়েছে:\n${url}`, event.threadID, event.messageID);
+  });
+}
