@@ -1,63 +1,55 @@
-const os = require('os');
-const startTime = new Date();
-let uptimeMessageInterval;
-
-// এখানে এডমিনের ID দিয়ে দিন
-const adminId = '61570292561520'; // YOUR_ADMIN_ID এর স্থানে আপনার এডমিন ID প্রদান করুন
-
-module.exports = {
-'config': {
-'name': "upt",
-'version': "1.0.1",
-'hasPermssion': 0x0,
-'credits': "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
-'description': "test",
-'commandCategory': "box",
-'usages': "test",
-'prefix': "false",
-'dependencies': {},
-'cooldowns': 0x5
-},
-'run': async function ({
-api: _0x1b9028,
-event: _0x2e0c98,
-args: _0x2d58a4
-}) {
-// Define uptime calculation function
-const calculateUptime = () => {
-const _0x2e1f77 = (new Date() - startTime) / 1000;
-const _0x483168 = Math.floor(_0x2e1f77 / 86400);
-const _0x580cd4 = Math.floor(_0x2e1f77 % 86400 / 3600);
-const _0x1be39a = Math.floor(_0x2e1f77 % 3600 / 60);
-const _0x5c4d32 = Math.floor(_0x2e1f77 % 60);
-return `${_0x483168}d ${_0x580cd4}h ${_0x1be39a}m ${_0x5c4d32}s`;
+module.exports.config = {
+  name: "upt",
+  version: "1.0.0",
+  hasPermssion: 0,
+  credits: "Kawsar Modified",
+  description: "Show uptime or add to Uptime Robot",
+  commandCategory: "monitor",
+  usages: "[upt] or [upt <link>]",
+  cooldowns: 5
 };
 
-// Function to send uptime message
-const sendUptimeMessage = async () => {
-const uptime = calculateUptime();
-const uptimeMessage = "♡  ∩_∩\n （„• ֊ •„)♡\n╭──∪∪───────⟡\n│𝗨𝗣𝗧𝗜𝗠𝗘 𝗜𝗡𝗙𝗢\n├───────────⟡\n│ ⏰ 𝗥𝗨𝗡𝗧𝗜𝗠𝗘\n│ " + uptime + "\n├───────────⟡";
-await _0x1b9028.sendMessage({
-'body': uptimeMessage
-}, adminId); // Send message only to admin
-};
+module.exports.run = async function({ api, event, args }) {
+  let time = process.uptime();
+  let hours = Math.floor(time / 3600);
+  let minutes = Math.floor((time % 3600) / 60);
+  let seconds = Math.floor(time % 60);
+  const formatTime = `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-// If uptime interval is already set, clear it to avoid multiple intervals
-if (uptimeMessageInterval) {
-clearInterval(uptimeMessageInterval);
+  // যদি কোনো লিংক না দেয়, শুধু টাইম দেখাও
+  if (args.length === 0) {
+    return api.sendMessage(formatTime, event.threadID, event.messageID);
+  }
+
+  // যদি লিংক দেয়, তাহলে Uptime Robot-এ পাঠাও
+  const url = args.join(" ");
+  const regex = /(http(s)?:\/\/)[^\s]+/g;
+  if (!url.match(regex)) {
+    return api.sendMessage("❌ দয়া করে একটা সঠিক লিংক দাও।", event.threadID, event.messageID);
+  }
+
+  const request = require("request");
+  const options = {
+    method: 'POST',
+    url: 'https://api.uptimerobot.com/v2/newMonitor',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    form: {
+      api_key: 'u2008156-9837ddae6b3c429bd0315101',
+      format: 'json',
+      type: '1',
+      url: url,
+      friendly_name: Date.now()
+    }
+  };
+
+  request(options, function (error, response, body) {
+    if (error) return api.sendMessage("😢 লিংক পাঠাতে সমস্যা হয়েছে!", event.threadID, event.messageID);
+
+    const result = JSON.parse(body);
+    if (result.stat === "fail") {
+      return api.sendMessage("❗এই লিংকটা আগেই add করা আছে বা ভুল!", event.threadID, event.messageID);
+    }
+
+    return api.sendMessage(`✅ লিংক add করা হয়েছে:\n${url}`, event.threadID, event.messageID);
+  });
 }
-
-// Send an initial uptime message
-await sendUptimeMessage();
-
-// Start a new interval to send uptime messages every 5 minutes
-uptimeMessageInterval = setInterval(sendUptimeMessage, 5 * 60 * 1000);
-
-// Handle command to stop the uptime messages if needed
-if (_0x2d58a4[0] === "stop") {
-clearInterval(uptimeMessageInterval);
-uptimeMessageInterval = null;
-return _0x1b9028.sendMessage("Uptime messages have been stopped.", adminId); // Send stop message to admin
-}
-}
-};
