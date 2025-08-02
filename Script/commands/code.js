@@ -12,6 +12,8 @@ module.exports.config = {
   version: "6.9.0",
   hasPermission: 2,
   credits: "dipto",
+  usePrefix: true,
+  prefix: true,
   description: "Convert code into link",
   commandCategory: "goatbot",
   category: " goatbot",
@@ -20,7 +22,7 @@ module.exports.config = {
 };
 
 module.exports.run = async function ({ api, event, args }) {
-  const admin = ["61570292561520"];
+  const admin = ["your uid here"];
   const fileName = args[0];
   if (!admin.includes(event.senderID)) {
     api.sendMessage(
