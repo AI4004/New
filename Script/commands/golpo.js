@@ -1,7 +1,6 @@
 module.exports.config = {
   name: "Golpo",
-  version: "1.0.0",
-  usePrefix: true, 
+  version: "1.0.0", 
   hasPermssion: 0,
   credits: "RAJA ✨",
   description: "রাজা-মিমের প্রেম কাহিনী পর্ব অনুযায়ী পাঠায়। রিপ্লাই করলে পরবর্তী গল্পও পাঠাবে।",
