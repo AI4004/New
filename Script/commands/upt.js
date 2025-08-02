@@ -1,79 +1,53 @@
-const axios = require("axios");
-const moment = require("moment");
+const os = require('os');
+const startTime = new Date();
+let intervalId;
 
 module.exports = {
-config: {
-name: "upt",
-aliases: ["upt"],
-version: "1.2",
-author: "Kawsar",
-cooldowns: 3,
-description: { en: "Shows bot uptime & auto-pings host to keep alive" },
-category: "system",
-guide: { en: "{pn} [status]" }
+'config': {
+'name': "upt",
+'version': "1.0.0",
+'hasPermssion': 0x0,
+'credits': "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
+'description': "test",
+'commandCategory': "box",
+'usages': "test",
+'prefix': "false",
+'dependencies': {},
+'cooldowns': 0x5
 },
-
-// বট অন হলে চালু হবে — host link auto-ping system
-onLoad: async function ({ api }) {
-const { config } = global.MiraiBot;
-
-// ✅ Host URL detect (RENDER, REPLIT, GLITCH etc.) 
-let hostURL = config.autoUptime?.url || 
-(process.env.REPL_OWNER 
-? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co` 
-: process.env.RENDER_EXTERNAL_URL || 
-(process.env.PROJECT_DOMAIN ? `https://${process.env.PROJECT_DOMAIN}.glitch.me` : null));
-
-if (!hostURL) {
-console.log("[UPTIME] ❌ Host URL not detected, auto-ping disabled.");
-return;
-}
-
-if (!hostURL.startsWith("http")) hostURL = "https://" + hostURL;
-hostURL += "/uptime"; // append uptime path 
-
-console.log(`[UPTIME] ✅ Auto ping started: ${hostURL}`);
-
-let lastStatus = "ok";
-
-setInterval(async () => { 
+'run': async function ({
+api: _0x1b9028,
+event: _0x2e0c98,
+args: _0x2d58a4
+}) {
+const sendUptimeInfo = async () => {
 try {
-await axios.get(hostURL, { timeout: 10000 });
-if (lastStatus !== "ok") {
-lastStatus = "ok";
-console.log("[UPTIME] ✅ Back online");
-}
-} catch (err) {
-if (lastStatus !== "fail") {
-lastStatus = "fail";
-console.log("[UPTIME] ❌ Ping failed");
+const _0x2e1f77 = (new Date() - startTime) / 1000;
+const _0x483168 = Math.floor(_0x2e1f77 / 86400);
+const _0x580cd4 = Math.floor(_0x2e1f77 % 86400 / 3600);
+const _0x1be39a = Math.floor(_0x2e1f77 % 3600 / 60);
+const _0x5c4d32 = Math.floor(_0x2e1f77 % 60);
+const _0x109cd3 = _0x483168 + "d " + _0x580cd4 + "h " + _0x1be39a + "m " + _0x5c4d32 + 's';
 
-const admins = global.MiraiBot.config.adminBot || [];
-for (const adminID of admins) {
-api.sendMessage(
-`🚨 𝐔𝐏𝐓𝐈𝐌𝐄 𝐀𝐋𝐄𝐑𝐓:\nYour bot host seems 🔴 DOWN!\n➤ ${hostURL}\n⏱️ Time: ${moment().format("YYYY-MM-DD HH:mm:ss")}`,
-adminID
-);
+const _0x23af44 = "♡ ∩_∩\n （„• ֊ •„)♡\n╭──∪∪───────⟡\n│𝗨𝗣𝗧𝗜𝗠𝗘 𝗜𝗡𝗙𝗢\n├───────────⟡\n│ ⏰ 𝗥𝗨𝗡𝗧𝗜𝗠𝗘\n│ " + _0x109cd3 + "\n├───────────⟡";
+
+await _0x1b9028.sendMessage({ 'body': _0x23af44 }, _0x2e0c98.threadID);
+} catch (error) {
+console.error("Error retrieving system information:", error);
 }
-}
-}
-}, 1000 * 60 * 5); // প্রতি ৫ মিনিটে ping
+};
+
+// Send the initial uptime info
+await sendUptimeInfo();
+
+// Set an interval to send uptime info every 5 minutes (300000 ms)
+intervalId = setInterval(sendUptimeInfo, 300000);
 },
-
-// যখন কেউ /uptime কমান্ড চালাবে
-onStart: async function ({ message, args }) {
-// ✅ Bot uptime in seconds
-const uptime = Math.floor(process.uptime());
-const days = Math.floor(uptime / 86400);
-const hours = Math.floor((uptime % 86400) / 3600);
-const minutes = Math.floor((uptime % 3600) / 60);
-const seconds = uptime % 60;
-
-let uptimeFormatted = `⏳ ${days}d ${hours}h ${minutes}m ${seconds}s`;
-if (days === 0) uptimeFormatted = `⏳ ${hours}h ${minutes}m ${seconds}s`;
-if (hours === 0) uptimeFormatted = `⏳ ${minutes}m ${seconds}s`;
-if (minutes === 0) uptimeFormatted = ` ${seconds}s`;
-
-return message.reply(`𝗕𝗼𝘁 𝗨𝗽𝘁𝗶𝗺𝗲: ${uptimeFormatted}`);
+'stop': function() {
+// Clear the interval when needed
+if (intervalId) {
+clearInterval(intervalId);
+intervalId = null;
+}
 }
 };
