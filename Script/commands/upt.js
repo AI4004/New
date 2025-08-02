@@ -1,16 +1,17 @@
 const os = require('os');
 const startTime = new Date();
 let intervalId;
+let uptimeEnabled = false; // ফ্ল্যাগ যুক্ত করা
 
 module.exports = {
 'config': {
 'name': "upt",
 'version': "1.0.0",
-'hasPermssion': 0x0,
+'hasPermission': 0x0,
 'credits': "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
-'description': "test",
+'description': "Displays uptime information.",
 'commandCategory': "box",
-'usages': "test",
+'usages': "upt",
 'prefix': "false",
 'dependencies': {},
 'cooldowns': 0x5
@@ -20,34 +21,41 @@ api: _0x1b9028,
 event: _0x2e0c98,
 args: _0x2d58a4
 }) {
+// ফাংশন যা আপটাইম তথ্য পাঠাবে
 const sendUptimeInfo = async () => {
 try {
-const _0x2e1f77 = (new Date() - startTime) / 1000;
-const _0x483168 = Math.floor(_0x2e1f77 / 86400);
-const _0x580cd4 = Math.floor(_0x2e1f77 % 86400 / 3600);
-const _0x1be39a = Math.floor(_0x2e1f77 % 3600 / 60);
-const _0x5c4d32 = Math.floor(_0x2e1f77 % 60);
-const _0x109cd3 = _0x483168 + "d " + _0x580cd4 + "h " + _0x1be39a + "m " + _0x5c4d32 + 's';
+const elapsedSeconds = (new Date() - startTime) / 1000;
+const days = Math.floor(elapsedSeconds / 86400);
+const hours = Math.floor(elapsedSeconds % 86400 / 3600);
+const minutes = Math.floor(elapsedSeconds % 3600 / 60);
+const seconds = Math.floor(elapsedSeconds % 60);
+const uptimeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;
 
-const _0x23af44 = "♡ ∩_∩\n （„• ֊ •„)♡\n╭──∪∪───────⟡\n│𝗨𝗣𝗧𝗜𝗠𝗘 𝗜𝗡𝗙𝗢\n├───────────⟡\n│ ⏰ 𝗥𝗨𝗡𝗧𝗜𝗠𝗘\n│ " + _0x109cd3 + "\n├───────────⟡";
+const message = `♡ ∩_∩\n （„• ֊ •„)♡\n╭──∪∪───────⟡\n│𝗨𝗣𝗧𝗜𝗠𝗘 𝗜𝗡𝗙𝗢\n├───────────⟡\n│ ⏰ 𝗥𝗨𝗡𝗧𝗜𝗠𝗘\n│ ${uptimeString}\n├───────────⟡`;
 
-await _0x1b9028.sendMessage({ 'body': _0x23af44 }, _0x2e0c98.threadID);
+await _0x1b9028.sendMessage({ 'body': message }, _0x2e0c98.threadID);
 } catch (error) {
 console.error("Error retrieving system information:", error);
 }
 };
 
-// Send the initial uptime info
-await sendUptimeInfo();
+// যদি Uptime আবেদন সক্রিয় থাকে তাহলে তথ্য পাঠান
+if (!uptimeEnabled) {
+uptimeEnabled = true;
+await sendUptimeInfo(); // প্রথমবার তথ্য পাঠান
 
-// Set an interval to send uptime info every 5 minutes (300000 ms)
+// প্রতি ৫ মিনিট পর পর তথ্য পাঠানোর জন্য একটি সময়সীমা
 intervalId = setInterval(sendUptimeInfo, 300000);
+} else {
+await _0x1b9028.sendMessage({ 'body': "Uptime information is already enabled. Use the command again to refresh." }, _0x2e0c98.threadID);
+}
 },
 'stop': function() {
-// Clear the interval when needed
+// যখন প্রয়োজন তখন সময়সীমা পরিষ্কার করুন
 if (intervalId) {
 clearInterval(intervalId);
 intervalId = null;
+uptimeEnabled = false; // Uptime পুনরায় নিষ্ক্রিয় করুন
 }
 }
 };
